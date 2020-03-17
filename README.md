@@ -1,5 +1,12 @@
 # RPOOL - routines pool for Golang
 
+[![Build Status](https://travis-ci.org/demdxx/rpool.svg?branch=master)](https://travis-ci.org/demdxx/rpool)
+[![Go Report Card](https://goreportcard.com/badge/github.com/demdxx/rpool)](https://goreportcard.com/report/github.com/demdxx/rpool)
+[![GoDoc](https://godoc.org/github.com/demdxx/rpool?status.svg)](https://godoc.org/github.com/demdxx/rpool)
+[![Coverage Status](https://coveralls.io/repos/github/demdxx/rpool/badge.svg)](https://coveralls.io/github/demdxx/rpool)
+
+> License Apache 2.0
+
 Extension of execution pools over native goroutines on the pure GO.
 
 ## Random task pool example
