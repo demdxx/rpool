@@ -1,10 +1,16 @@
 package rpool
 
-import "sync/atomic"
+import (
+	"sync/atomic"
+)
 
 // Pool provides common queue of tasks execution
 type Pool struct {
 	inProcess int64
+
+	// Maximum amount of tasks in the pool and worker executor
+	// All extra tasks must be skiped
+	maxExecutionLimit int
 
 	// Pool of tasks
 	tasks chan func()
@@ -23,9 +29,10 @@ func NewPool(options ...Option) *Pool {
 		opt(&option)
 	}
 	pool := &Pool{
-		tasks:      make(chan func(), option.TaskQueueSize()),
-		workers:    make([]*worker, 0, option.PreparedWorkerCount()),
-		recoverFnk: option.RecoverHandler,
+		tasks:             make(chan func(), option.TaskQueueSize()),
+		workers:           make([]*worker, 0, option.PreparedWorkerCount()),
+		recoverFnk:        option.RecoverHandler,
+		maxExecutionLimit: option.MaxTasksCount,
 	}
 	for i := 0; i < option.PreparedWorkerCount(); i++ {
 		w := pool.newWorker()
@@ -35,12 +42,21 @@ func NewPool(options ...Option) *Pool {
 	return pool
 }
 
-// Go sends function task into the queue
-func (pool *Pool) Go(f func()) {
-	pool.tasks <- f
+// NewSinglePool for one task simultaneusly processing
+func NewSinglePool(options ...Option) *Pool {
+	return NewPool(append(options, WithMaxTasksCount(1))...)
 }
 
-// InProcess returns count of tasks in process
+// Go sends function task into the queue
+func (pool *Pool) Go(f func()) bool {
+	if pool.maxExecutionLimit <= 0 || pool.maxExecutionLimit-int(pool.InProcess())-len(pool.tasks) > 0 {
+		pool.tasks <- f
+		return true
+	}
+	return false
+}
+
+// InProcess returns count of tasks in process``
 func (pool *Pool) InProcess() int64 {
 	return atomic.LoadInt64(&pool.inProcess)
 }

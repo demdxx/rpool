@@ -9,6 +9,7 @@ type Option func(opt *PoolOption)
 type PoolOption struct {
 	WorkerCount    int
 	WorkerPoolSize int
+	MaxTasksCount  int
 	RecoverHandler func(interface{})
 }
 
@@ -46,5 +47,12 @@ func WithWorkerPoolSize(size int) Option {
 func WithRecoverHandler(f func(interface{})) Option {
 	return func(opt *PoolOption) {
 		opt.RecoverHandler = f
+	}
+}
+
+// WithMaxTasksCount defines maximum amount of tasks prepared for execution
+func WithMaxTasksCount(cnt int) Option {
+	return func(opt *PoolOption) {
+		opt.MaxTasksCount = cnt
 	}
 }

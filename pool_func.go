@@ -8,6 +8,10 @@ import (
 type PoolFunc struct {
 	inProcess int64
 
+	// Maximum amount of tasks in the pool and worker executor
+	// All extra tasks must be skiped
+	maxExecutionLimit int
+
 	// Pool of tasks
 	tasks chan interface{}
 
@@ -28,10 +32,11 @@ func NewPoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
 		opt(&option)
 	}
 	pool := &PoolFunc{
-		fnk:        fnk,
-		tasks:      make(chan interface{}, option.TaskQueueSize()),
-		workers:    make([]*workerFunc, 0, option.PreparedWorkerCount()),
-		recoverFnk: option.RecoverHandler,
+		fnk:               fnk,
+		tasks:             make(chan interface{}, option.TaskQueueSize()),
+		workers:           make([]*workerFunc, 0, option.PreparedWorkerCount()),
+		recoverFnk:        option.RecoverHandler,
+		maxExecutionLimit: option.MaxTasksCount,
 	}
 	for i := 0; i < option.PreparedWorkerCount(); i++ {
 		w := pool.newWorker()
@@ -41,9 +46,18 @@ func NewPoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
 	return pool
 }
 
+// NewSinglePoolFunc returns function pool one task simultaneusly processing
+func NewSinglePoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
+	return NewPoolFunc(fnk, append(options, WithMaxTasksCount(1))...)
+}
+
 // Call new task with the arg
-func (pool *PoolFunc) Call(arg interface{}) {
-	pool.tasks <- arg
+func (pool *PoolFunc) Call(arg interface{}) bool {
+	if pool.maxExecutionLimit <= 0 || pool.maxExecutionLimit-int(pool.InProcess())-len(pool.tasks) > 0 {
+		pool.tasks <- arg
+		return true
+	}
+	return false
 }
 
 // InProcess returns count of tasks in process
