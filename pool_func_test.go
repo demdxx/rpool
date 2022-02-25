@@ -17,8 +17,8 @@ func Test_PoolFunc(t *testing.T) {
 		wg         sync.WaitGroup
 		iterations int64
 		curMem     = curMemory()
-		pool       = NewPoolFunc(func(arg interface{}) {
-			atomic.AddInt64(arg.(*int64), 1)
+		pool       = NewPoolFunc(func(v *int64) {
+			atomic.AddInt64(v, 1)
 			wg.Done()
 		}, WithWorkerCount(runtime.NumCPU()), WithWorkerPoolSize(10))
 	)
@@ -43,9 +43,9 @@ func Test_PoolFuncPanic(t *testing.T) {
 	var (
 		wg      sync.WaitGroup
 		catched bool
-		pool    = NewPoolFunc(func(arg interface{}) {
+		pool    = NewPoolFunc(func(arg any) {
 			panic("test")
-		}, WithRecoverHandler(func(rec interface{}) {
+		}, WithRecoverHandler(func(rec any) {
 			catched = true
 			wg.Done()
 		}))
@@ -70,8 +70,8 @@ func Test_NoPoolFunc(t *testing.T) {
 
 	for i := 0; i < testCallCount; i++ {
 		wg.Add(1)
-		go func(arg interface{}) {
-			atomic.AddInt64(arg.(*int64), 1)
+		go func(arg *int64) {
+			atomic.AddInt64(arg, 1)
 			wg.Done()
 		}(&iterations)
 	}
@@ -90,8 +90,8 @@ func Benchmark_PoolFunc(b *testing.B) {
 	var (
 		wg         sync.WaitGroup
 		iterations int64
-		pool       = NewPoolFunc(func(arg interface{}) {
-			atomic.AddInt64(arg.(*int64), 1)
+		pool       = NewPoolFunc(func(arg *int64) {
+			atomic.AddInt64(arg, 1)
 			wg.Done()
 		})
 	)
@@ -116,8 +116,8 @@ func Benchmark_NoPoolFunc(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			wg.Add(1)
-			go func(arg interface{}) {
-				atomic.AddInt64(arg.(*int64), 1)
+			go func(arg *int64) {
+				atomic.AddInt64(arg, 1)
 				wg.Done()
 			}(&iterations)
 		}

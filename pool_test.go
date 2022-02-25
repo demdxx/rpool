@@ -63,7 +63,7 @@ func Test_PoolPanic(t *testing.T) {
 	var (
 		wg      sync.WaitGroup
 		catched bool
-		pool    = NewPool(WithRecoverHandler(func(rec interface{}) {
+		pool    = NewPool(WithRecoverHandler(func(rec any) {
 			catched = true
 			wg.Done()
 		}))

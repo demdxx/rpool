@@ -10,7 +10,7 @@ type PoolOption struct {
 	WorkerCount    int
 	WorkerPoolSize int
 	MaxTasksCount  int
-	RecoverHandler func(interface{})
+	RecoverHandler func(any)
 }
 
 // TaskQueueSize returns the common pool size for all workers
@@ -44,7 +44,7 @@ func WithWorkerPoolSize(size int) Option {
 }
 
 // WithRecoverHandler defined error handler
-func WithRecoverHandler(f func(interface{})) Option {
+func WithRecoverHandler(f func(any)) Option {
 	return func(opt *PoolOption) {
 		opt.RecoverHandler = f
 	}

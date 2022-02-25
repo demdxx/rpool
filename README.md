@@ -10,7 +10,7 @@
 Extension of execution pools over native goroutines on the pure GO.
 
 ```go
-import "github.com/demdxx/rpool"
+import "github.com/demdxx/rpool/v2" // Minimal version is Go1.18
 ```
 
 ## Random task pool example
@@ -29,8 +29,8 @@ pool.Go(func(){
 To process some predefined executor over the concurrent queue.
 
 ```go
-pool := NewPoolFunc(func(arg interface{}) {
-  atomic.AddInt64(arg.(*int64), 1)
+pool := NewPoolFunc(func(arg *int64) {
+  atomic.AddInt64(arg, 1)
 })
 defer pool.Close()
 
@@ -44,7 +44,7 @@ All new tasks will be skipet.
 
 ```go
 datastore := userStore.New()
-dataStoreUpdate := NewSinglePoolFunc(func(arg interface{}) {
+dataStoreUpdate := NewSinglePoolFunc(func(arg any) {
   datastore.Refresh()
 })
 defer pool.Close()
@@ -59,36 +59,19 @@ if !dataStoreUpdate.Call() {
 # Benchmarks
 
 ```sh
-Running tool: go test -benchmem -run=^$ github.com/demdxx/go-rpool -bench . -v -race
+Running tool: go test -benchmem -run=^$ github.com/demdxx/rpool -bench . -v -race
 
-goos: darwin
-goarch: amd64
-pkg: github.com/demdxx/rpool
-Benchmark_PoolFunc
-Benchmark_PoolFunc-8     	  340465	      3028 ns/op	       0 B/op	       0 allocs/op
-Benchmark_NoPoolFunc
-Benchmark_NoPoolFunc-8   	   22674	     66280 ns/op	       2 B/op	       0 allocs/op
-Benchmark_Pool
-Benchmark_Pool-8         	   58316	     21381 ns/op	      32 B/op	       1 allocs/op
-Benchmark_NoPool
-Benchmark_NoPool-8       	   20587	     59611 ns/op	       0 B/op	       0 allocs/op
-PASS
-ok  	github.com/demdxx/rpool	7.948s
-```
-
-On MacOS M1 ARM
-```sh
 goos: darwin
 goarch: arm64
 pkg: github.com/demdxx/rpool
 Benchmark_PoolFunc
-Benchmark_PoolFunc-8              237615              4707 ns/op               0 B/op          0 allocs/op
+Benchmark_PoolFunc-8              283292              4289 ns/op        0 B/op          0 allocs/op
 Benchmark_NoPoolFunc
-Benchmark_NoPoolFunc-8             45610             24663 ns/op               6 B/op          0 allocs/op
+Benchmark_NoPoolFunc-8             40347             26279 ns/op       46 B/op          2 allocs/op
 Benchmark_Pool
-Benchmark_Pool-8                   24295             47394 ns/op              24 B/op          1 allocs/op
+Benchmark_Pool-8                   25153             50894 ns/op       24 B/op          1 allocs/op
 Benchmark_NoPool
-Benchmark_NoPool-8                 33097             33844 ns/op               2 B/op          0 allocs/op
+Benchmark_NoPool-8                 31624             32654 ns/op       24 B/op          1 allocs/op
 PASS
-ok      github.com/demdxx/rpool 6.066s
+ok      github.com/demdxx/rpool 5.945s
 ```

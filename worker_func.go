@@ -1,14 +1,14 @@
 package rpool
 
-type workerFunc struct {
-	pool *PoolFunc
+type workerFunc[T any] struct {
+	pool *PoolFunc[T]
 }
 
-func (w *workerFunc) start() {
+func (w *workerFunc[T]) start() {
 	go w.queue()
 }
 
-func (w *workerFunc) queue() {
+func (w *workerFunc[T]) queue() {
 	defer func() {
 		if err := recover(); err != nil {
 			w.pool.decProcess()
