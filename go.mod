@@ -1,4 +1,4 @@
-module github.com/demdxx/rpool
+module github.com/demdxx/rpool/v2
 
 go 1.18
 
