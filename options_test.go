@@ -11,7 +11,7 @@ func TestPoolOptions(t *testing.T) {
 	WithMaxTasksCount(10)(&options)
 	WithWorkerCount(20)(&options)
 	WithWorkerPoolSize(30)(&options)
-	WithRecoverHandler(func(i interface{}) {})(&options)
+	WithRecoverHandler(func(i any) {})(&options)
 
 	assert.Equal(t, 10, options.MaxTasksCount)
 	assert.Equal(t, 20, options.WorkerCount)

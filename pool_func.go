@@ -5,7 +5,7 @@ import (
 )
 
 // PoolFunc concurrent async processor with single handler
-type PoolFunc struct {
+type PoolFunc[T any] struct {
 	inProcess int64
 
 	// Maximum amount of tasks in the pool and worker executor
@@ -13,28 +13,28 @@ type PoolFunc struct {
 	maxExecutionLimit int
 
 	// Pool of tasks
-	tasks chan interface{}
+	tasks chan T
 
 	// pool handler function
-	fnk func(interface{})
+	fnk func(T)
 
 	// recover func handler
-	recoverFnk func(rec interface{})
+	recoverFnk func(rec any)
 
 	// list ow workers
-	workers []*workerFunc
+	workers []*workerFunc[T]
 }
 
 // NewPoolFunc returns function pool
-func NewPoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
+func NewPoolFunc[T any](fnk func(T), options ...Option) *PoolFunc[T] {
 	option := PoolOption{}
 	for _, opt := range options {
 		opt(&option)
 	}
-	pool := &PoolFunc{
+	pool := &PoolFunc[T]{
 		fnk:               fnk,
-		tasks:             make(chan interface{}, option.TaskQueueSize()),
-		workers:           make([]*workerFunc, 0, option.PreparedWorkerCount()),
+		tasks:             make(chan T, option.TaskQueueSize()),
+		workers:           make([]*workerFunc[T], 0, option.PreparedWorkerCount()),
 		recoverFnk:        option.RecoverHandler,
 		maxExecutionLimit: option.MaxTasksCount,
 	}
@@ -47,12 +47,12 @@ func NewPoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
 }
 
 // NewSinglePoolFunc returns function pool one task simultaneusly processing
-func NewSinglePoolFunc(fnk func(interface{}), options ...Option) *PoolFunc {
+func NewSinglePoolFunc[T any](fnk func(T), options ...Option) *PoolFunc[T] {
 	return NewPoolFunc(fnk, append(options, WithMaxTasksCount(1))...)
 }
 
 // Call new task with the arg
-func (pool *PoolFunc) Call(arg interface{}) bool {
+func (pool *PoolFunc[T]) Call(arg T) bool {
 	if pool.maxExecutionLimit <= 0 || pool.maxExecutionLimit-int(pool.InProcess())-len(pool.tasks) > 0 {
 		pool.tasks <- arg
 		return true
@@ -61,29 +61,29 @@ func (pool *PoolFunc) Call(arg interface{}) bool {
 }
 
 // InProcess returns count of tasks in process
-func (pool *PoolFunc) InProcess() int64 {
+func (pool *PoolFunc[T]) InProcess() int64 {
 	return atomic.LoadInt64(&pool.inProcess)
 }
 
-func (pool *PoolFunc) incProcess() int64 {
+func (pool *PoolFunc[T]) incProcess() int64 {
 	return atomic.AddInt64(&pool.inProcess, 1)
 }
 
-func (pool *PoolFunc) decProcess() int64 {
+func (pool *PoolFunc[T]) decProcess() int64 {
 	return atomic.AddInt64(&pool.inProcess, -1)
 }
 
-func (pool *PoolFunc) newWorker() *workerFunc {
-	return &workerFunc{pool: pool}
+func (pool *PoolFunc[T]) newWorker() *workerFunc[T] {
+	return &workerFunc[T]{pool: pool}
 }
 
-func (pool *PoolFunc) restart(w *workerFunc) {
+func (pool *PoolFunc[T]) restart(w *workerFunc[T]) {
 	w.start()
 }
 
 // Close of the pool and all workers.
 // Tasks can be finished later
-func (pool *PoolFunc) Close() error {
+func (pool *PoolFunc[T]) Close() error {
 	close(pool.tasks)
 	return nil
 }

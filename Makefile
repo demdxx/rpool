@@ -1,10 +1,14 @@
 .PHONY: bench
 bench: ## Run benchmarks
-	go test -benchmem -run=^$ github.com/demdxx/go-rpool -bench . -v -race
+	go test -benchmem -run=^$ github.com/demdxx/rpool -bench . -v -race
 
 .PHONY: test
 test: ## Run unit tests
 	go test -v -race ./...
+
+.PHONY: tidy
+tidy: ## Run tidy util
+	go mod tidy
 
 .PHONY: help
 help:

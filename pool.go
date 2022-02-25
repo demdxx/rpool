@@ -16,7 +16,7 @@ type Pool struct {
 	tasks chan func()
 
 	// recover func handler
-	recoverFnk func(rec interface{})
+	recoverFnk func(rec any)
 
 	// list ow workers
 	workers []*worker
